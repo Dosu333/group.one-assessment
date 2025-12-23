@@ -56,7 +56,7 @@ class License(BaseModel):
                                 related_name='licenses')
     status = models.CharField(max_length=20, choices=LICENSE_STATUS_CHOICES,
                               default='VALID')
-    expires_at = models.DateTimeField(blank=True, null=True)
+    expiration_date = models.DateTimeField(blank=True, null=True)
     seat_limit = models.PositiveIntegerField(blank=True, null=True)
 
     def __str__(self):
