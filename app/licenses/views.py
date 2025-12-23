@@ -28,6 +28,7 @@ class LicenseProvisioningView(APIView):
 
             return Response({
                 "key": license_key.key_string,
+                "customer_email": license_key.customer_email,
                 "products": [
                     p.name
                     for p in license_key.licenses.select_related('product')
