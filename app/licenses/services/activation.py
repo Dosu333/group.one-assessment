@@ -1,6 +1,6 @@
 from django.db import transaction
 from django.utils import timezone
-from core.models import License, Activation
+from licenses.models import License, Activation
 from rest_framework.exceptions import ValidationError
 
 

@@ -48,3 +48,25 @@ class LicenseInstanceActionSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                                     "Invalid license key for this brand.")
         return value
+
+
+class EntitlementSerializer(serializers.Serializer):
+    product_name = serializers.CharField(source='product.name')
+    product_slug = serializers.CharField(source='product.slug')
+    status = serializers.CharField()
+    expiration_date = serializers.DateTimeField()
+    seat_limit = serializers.IntegerField()
+    seats_used = serializers.SerializerMethodField()
+    seats_remaining = serializers.SerializerMethodField()
+
+    def get_seats_used(self, obj):
+        return obj.activations.count()
+
+    def get_seats_remaining(self, obj):
+        return max(0, obj.seat_limit - obj.activations.count())
+
+
+class LicenseStatusResponseSerializer(serializers.Serializer):
+    key = serializers.CharField(source='key_string')
+    customer_email = serializers.EmailField()
+    entitlements = EntitlementSerializer(source='licenses', many=True)
