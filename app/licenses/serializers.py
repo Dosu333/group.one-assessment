@@ -8,6 +8,9 @@ class ProvisionLicenseSerializer(serializers.Serializer):
         child=serializers.IntegerField(), min_length=1
     )
     existing_key = serializers.CharField(required=False)
+    expiration_days = serializers.IntegerField(
+        required=False, default=365, min_value=1
+    )
 
     def validate_product_ids(self, value):
         brand = self.context['request'].user  # Authenticated brand

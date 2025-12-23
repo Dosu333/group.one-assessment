@@ -14,12 +14,16 @@ class LicenseProvisioningView(APIView):
                             status=status.HTTP_400_BAD_REQUEST)
         email = serializer.validated_data['customer_email']
         product_ids = serializer.validated_data['product_ids']
+        existing_key = serializer.validated_data.get('existing_key')
+        expiration_days = serializer.validated_data.get('expiration_days', 365)
 
         try:
             license_key = ProvisioningService.provision_license_bundle(
                 brand=request.user,
                 customer_email=email,
-                product_ids=product_ids
+                product_ids=product_ids,
+                existing_key=existing_key,
+                expiration_days=expiration_days
             )
 
             return Response({

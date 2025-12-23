@@ -1,7 +1,7 @@
 import secrets
 from django.db import transaction, IntegrityError
 from django.utils import timezone
-from core.models import LicenseKey, License, Product
+from licenses.models import LicenseKey, License, Product
 from rest_framework.exceptions import ValidationError
 
 
@@ -29,11 +29,13 @@ class ProvisioningService:
                 try:
                     license_key = LicenseKey.objects.select_for_update().get(
                         brand=brand,
-                        key_string=existing_key
+                        key_string=existing_key,
+                        customer_email=customer_email
                     )
                 except LicenseKey.DoesNotExist:
                     raise ValidationError(
-                            "License key not found for this brand.")
+                            "License key not found for this customer and brand"
+                        )
             else:
                 license_key = ProvisioningService._create_unique_key(
                     brand=brand,
