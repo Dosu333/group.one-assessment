@@ -3,9 +3,9 @@ import uuid
 
 
 LICENSE_STATUS_CHOICES = (
-    ('VALID', 'VALID'),
-    ('SUSPENDED', 'SUSPENDED'),
-    ('CANCELLED', 'CANCELLED')
+    ('valid', 'Valid'),
+    ('suspended', 'Suspended'),
+    ('cancelled', 'Cancelled'),
 )
 
 
@@ -67,6 +67,9 @@ class Activation(BaseModel):
     license = models.ForeignKey(License, on_delete=models.CASCADE,
                                 related_name='activations')
     instance_identifier = models.CharField(max_length=255)
+
+    class Meta:
+        unique_together = ('license', 'instance_identifier')
 
     def __str__(self):
         return self.instance_identifier
