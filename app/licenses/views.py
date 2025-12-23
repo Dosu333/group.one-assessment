@@ -4,10 +4,12 @@ from rest_framework import status
 from rest_framework.exceptions import ValidationError
 from .serializers import (
     ProvisionLicenseSerializer,
-    LicenseInstanceActionSerializer
+    LicenseInstanceActionSerializer,
+    LicenseStatusResponseSerializer
 )
 from .services.provisioning import ProvisioningService
 from .services.activation import ActivationService
+from .services.status import StatusService
 
 
 class LicenseProvisioningView(APIView):
@@ -83,3 +85,21 @@ class DeactivationView(APIView):
             return Response({"status": "deactivated"}, status=200)
         except ValidationError as e:
             return Response({"error": e.detail}, status=400)
+
+
+class LicenseStatusView(APIView):
+    """
+    End-user product or customer can check the status and entitlements.
+    """
+    def get(self, request, key_string):
+        license_key_obj = StatusService.get_license_status(request.user,
+                                                           key_string)
+
+        if not license_key_obj:
+            return Response(
+                {"error": "License key not found for this brand."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = LicenseStatusResponseSerializer(license_key_obj)
+        return Response(serializer.data, status=status.HTTP_200_OK)

@@ -2,7 +2,8 @@ from django.urls import path
 from .views import (
     LicenseProvisioningView,
     ActivationView,
-    DeactivationView
+    DeactivationView,
+    LicenseStatusView
 )
 
 
@@ -12,4 +13,5 @@ urlpatterns = [
     path("activate/", ActivationView.as_view(), name="license-activation"),
     path("deactivate/", DeactivationView.as_view(),
          name="license-deactivation"),
+    path("status/", LicenseStatusView.as_view(), name="license-status")
 ]
