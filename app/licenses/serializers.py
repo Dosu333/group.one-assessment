@@ -70,3 +70,11 @@ class LicenseStatusResponseSerializer(serializers.Serializer):
     key = serializers.CharField(source='key_string')
     customer_email = serializers.EmailField()
     entitlements = EntitlementSerializer(source='licenses', many=True)
+
+
+class GlobalLicenseKeySerializer(serializers.Serializer):
+    brand_name = serializers.CharField(source='brand.name')
+    key = serializers.CharField(source='key_string')
+    customer_email = serializers.EmailField()
+    created_at = serializers.DateTimeField()
+    entitlements = EntitlementSerializer(source='licenses', many=True)
