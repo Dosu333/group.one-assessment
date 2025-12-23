@@ -1,8 +1,13 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import ProvisionLicenseSerializer
+from rest_framework.exceptions import ValidationError
+from .serializers import (
+    ProvisionLicenseSerializer,
+    LicenseInstanceActionSerializer
+)
 from .services.provisioning import ProvisioningService
+from .services.activation import ActivationService
 
 
 class LicenseProvisioningView(APIView):
@@ -12,18 +17,15 @@ class LicenseProvisioningView(APIView):
         if not serializer.is_valid():
             return Response(serializer.errors,
                             status=status.HTTP_400_BAD_REQUEST)
-        email = serializer.validated_data['customer_email']
-        product_ids = serializer.validated_data['product_ids']
-        existing_key = serializer.validated_data.get('existing_key')
-        expiration_days = serializer.validated_data.get('expiration_days', 365)
+        data = serializer.validated_data
 
         try:
             license_key = ProvisioningService.provision_license_bundle(
                 brand=request.user,
-                customer_email=email,
-                product_ids=product_ids,
-                existing_key=existing_key,
-                expiration_days=expiration_days
+                customer_email=data['customer_email'],
+                product_ids=data['product_ids'],
+                existing_key=data.get('existing_key'),
+                expiration_days=data.get('expiration_days', 365)
             )
 
             return Response({
@@ -41,3 +43,43 @@ class LicenseProvisioningView(APIView):
                 "error": str(e)
                 },
                 status=status.HTTP_400_BAD_REQUEST)
+
+
+class ActivationView(APIView):
+    def post(self, request):
+        serializer = LicenseInstanceActionSerializer(
+                        data=request.data, context={'request': request})
+        if not serializer.is_valid():
+            return Response({"error": serializer.errors},
+                            status=status.HTTP_400_BAD_REQUEST)
+        data = serializer.validated_data
+
+        try:
+            ActivationService.activate_instance(
+                brand=request.user,
+                key_string=data['license_key'],
+                instance_id=data['instance_id']
+            )
+            return Response({"status": "activated"}, status=200)
+        except ValidationError as e:
+            return Response({"error": e.detail}, status=400)
+
+
+class DeactivationView(APIView):
+    def post(self, request):
+        serializer = LicenseInstanceActionSerializer(
+                        data=request.data, context={'request': request})
+        if not serializer.is_valid():
+            return Response({"error": serializer.errors},
+                            status=status.HTTP_400_BAD_REQUEST)
+        data = serializer.validated_data
+
+        try:
+            ActivationService.deactivate_instance(
+                brand=request.user,
+                key_string=data['license_key'],
+                instance_id=data['instance_id']
+            )
+            return Response({"status": "deactivated"}, status=200)
+        except ValidationError as e:
+            return Response({"error": e.detail}, status=400)
