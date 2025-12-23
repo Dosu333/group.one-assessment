@@ -5,14 +5,24 @@ from rest_framework.exceptions import ValidationError
 from .serializers import (
     ProvisionLicenseSerializer,
     LicenseInstanceActionSerializer,
-    LicenseStatusResponseSerializer
+    LicenseStatusResponseSerializer,
+    GlobalLicenseKeySerializer
 )
+from .authentication import (
+    BrandApiKeyAuthentication,
+    ProductPublicAuthentication
+)
+from .permissions import IsAuthenticatedBrandSystem
 from .services.provisioning import ProvisioningService
 from .services.activation import ActivationService
 from .services.status import StatusService
+from .services.lookups import GlobalLookupService
 
 
 class LicenseProvisioningView(APIView):
+    authentication_classes = [BrandApiKeyAuthentication]
+    permission_classes = [IsAuthenticatedBrandSystem]
+
     def post(self, request):
         serializer = ProvisionLicenseSerializer(
                         data=request.data, context={'request': request})
@@ -48,6 +58,8 @@ class LicenseProvisioningView(APIView):
 
 
 class ActivationView(APIView):
+    authentication_classes = [ProductPublicAuthentication]
+
     def post(self, request):
         serializer = LicenseInstanceActionSerializer(
                         data=request.data, context={'request': request})
@@ -68,6 +80,8 @@ class ActivationView(APIView):
 
 
 class DeactivationView(APIView):
+    authentication_classes = [ProductPublicAuthentication]
+
     def post(self, request):
         serializer = LicenseInstanceActionSerializer(
                         data=request.data, context={'request': request})
@@ -91,6 +105,8 @@ class LicenseStatusView(APIView):
     """
     End-user product or customer can check the status and entitlements.
     """
+    authentication_classes = [ProductPublicAuthentication]
+
     def get(self, request, key_string):
         license_key_obj = StatusService.get_license_status(request.user,
                                                            key_string)
@@ -103,3 +119,26 @@ class LicenseStatusView(APIView):
 
         serializer = LicenseStatusResponseSerializer(license_key_obj)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class GlobalCustomerLookupView(APIView):
+    """
+    Brands can list licenses by customer email across all brands.
+    """
+    authentication_classes = [BrandApiKeyAuthentication]
+    permission_classes = [IsAuthenticatedBrandSystem]
+
+    def get(self, request):
+        email = request.query_params.get('email')
+        if not email:
+            return Response({"error": "Email parameter is required."},
+                            status=400)
+
+        results = GlobalLookupService.get_all_licenses_by_email(email)
+
+        serializer = GlobalLicenseKeySerializer(results, many=True)
+        return Response({
+            "customer_email": email,
+            "total_keys_found": results.count(),
+            "licenses": serializer.data
+        })
