@@ -13,3 +13,16 @@ class BrandApiKeyAuthentication(authentication.BaseAuthentication):
         except (Brand.DoesNotExist, ValueError):
             raise exceptions.AuthenticationFailed('Invalid Brand API Key.')
         return (brand, None)
+
+
+class ProductPublicAuthentication(authentication.BaseAuthentication):
+    def authenticate(self, request):
+        brand_slug = request.headers.get('X-Brand-Slug')
+        if not brand_slug:
+            return None
+
+        try:
+            brand = Brand.objects.get(slug=brand_slug)
+        except Brand.DoesNotExist:
+            raise exceptions.AuthenticationFailed('Invalid Brand identifier.')
+        return (brand, None)
