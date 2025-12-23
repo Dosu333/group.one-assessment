@@ -1,4 +1,6 @@
 from django.db import models
+from django.utils.text import slugify
+import secrets
 import uuid
 
 
@@ -20,8 +22,26 @@ class BaseModel(models.Model):
 
 class Brand(BaseModel):
     name = models.CharField(max_length=255)
-    api_key = models.CharField(max_length=255, unique=True)
-    webhook_url = models.URLField(blank=True, null=True)
+    api_key = models.CharField(max_length=255, unique=True, editable=False)
+    slug = models.SlugField(unique=True)
+
+    def generate_unique_slug(self):
+        base_slug = slugify(self.name)
+        slug = base_slug
+        counter = 1
+
+        while Brand.objects.filter(slug=slug).exclude(id=self.id).exists():
+            slug = f"{base_slug}-{counter}"
+            counter += 1
+        return slug
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = self.generate_unique_slug()
+
+        if not self.api_key:
+            self.api_key = f"sk_live_{secrets.token_urlsafe(32)}"
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name
