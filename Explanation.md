@@ -1,7 +1,6 @@
-# Explanation.md (Draft)
-
 ## 1. Problem Statement
 The objective is to build a Centralized License Service for group.one to act as a unified "Source of Truth" for license lifecycles across multiple brands (e.g., WP Rocket, RankMath). Currently, brand-specific systems manage their own payments and users, but we need a central authority to provision, validate, and manage entitlements to ensure a seamless ecosystem for both the brands and the end-users.   
+
 
 ## 2. Architecture & Design Decisions
 ### Centralized vs. Distributed Licenses
@@ -16,6 +15,7 @@ We are implementing Logical Multi-tenancy using a brand_id foreign key on all co
 
 - Isolation: Every API request must be authenticated with a Brand-specific credential.  
 - Data Integrity: Queries are scoped at the database level to ensure Brand A can never access Brand B's data.   
+
 
 ## 3. Tech Stack: Why Django?
 For the implementation, Django (Python) is the chosen framework. It is ideal for this use case because:   
