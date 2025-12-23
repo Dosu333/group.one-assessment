@@ -1,4 +1,5 @@
 from rest_framework.views import APIView
+from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
@@ -6,17 +7,31 @@ from .serializers import (
     ProvisionLicenseSerializer,
     LicenseInstanceActionSerializer,
     LicenseStatusResponseSerializer,
-    GlobalLicenseKeySerializer
+    GlobalLicenseKeySerializer,
+    ProductSerializer
 )
 from .authentication import (
     BrandApiKeyAuthentication,
-    ProductPublicAuthentication
+    ProductPublicAuthentication,
 )
+from .models import Product
 from .permissions import IsAuthenticatedBrandSystem
 from .services.provisioning import ProvisioningService
 from .services.activation import ActivationService
 from .services.status import StatusService
 from .services.lookups import GlobalLookupService
+
+
+class ProductViewSet(ModelViewSet):
+    """
+    Provides a list of available products for the authenticated brand.
+    Required for the Brand System to know which IDs to use in US1.
+    """
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    authentication_classes = [BrandApiKeyAuthentication]
+    permission_classes = [IsAuthenticatedBrandSystem]
+    http_method_names = ['get']
 
 
 class LicenseProvisioningView(APIView):

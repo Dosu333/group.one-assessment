@@ -2,6 +2,13 @@ from rest_framework import serializers
 from .models import Product, LicenseKey
 
 
+class ProductSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = ['id', 'name', 'slug']
+        read_only_fields = ['id']
+
+
 class ProvisionLicenseSerializer(serializers.Serializer):
     customer_email = serializers.EmailField()
     product_ids = serializers.ListField(
