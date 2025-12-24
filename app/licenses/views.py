@@ -47,6 +47,12 @@ class LicenseProvisioningView(APIView):
         if not serializer.is_valid():
             return Response(serializer.errors,
                             status=status.HTTP_400_BAD_REQUEST)
+        ctx = {
+            'request_id': getattr(request, 'request_id', 'N/A'),
+            'brand_id': request.user.id,
+            'brand_name': request.user.name,
+            'ip_address': request.META.get('REMOTE_ADDR')
+        }
         data = serializer.validated_data
 
         try:
@@ -55,7 +61,8 @@ class LicenseProvisioningView(APIView):
                 customer_email=data['customer_email'],
                 product_ids=data['product_ids'],
                 existing_key=data.get('existing_key'),
-                expiration_days=data.get('expiration_days', 365)
+                expiration_days=data.get('expiration_days', 365),
+                context=ctx
             )
 
             return Response({
@@ -88,12 +95,18 @@ class ActivationView(APIView):
             return Response({"error": serializer.errors},
                             status=status.HTTP_400_BAD_REQUEST)
         data = serializer.validated_data
+        ctx = {
+            'request_id': getattr(request, 'request_id', 'N/A'),
+            'brand_id': request.user.id,
+            'brand_name': request.user.name
+        }
 
         try:
             ActivationService.activate_instance(
                 brand=request.user,
                 key_string=data['license_key'],
-                instance_id=data['instance_id']
+                instance_id=data['instance_id'],
+                context=ctx
             )
             return Response({"status": "activated"})
         except ValidationError as e:
@@ -111,12 +124,18 @@ class DeactivationView(APIView):
             return Response({"error": serializer.errors},
                             status=status.HTTP_400_BAD_REQUEST)
         data = serializer.validated_data
+        ctx = {
+            'request_id': getattr(request, 'request_id', 'N/A'),
+            'brand_id': request.user.id,
+            'brand_name': request.user.name
+        }
 
         try:
             ActivationService.deactivate_instance(
                 brand=request.user,
                 key_string=data['license_key'],
-                instance_id=data['instance_id']
+                instance_id=data['instance_id'],
+                context=ctx
             )
             return Response({"status": "deactivated"})
         except ValidationError as e:
@@ -131,8 +150,16 @@ class LicenseStatusView(APIView):
     authentication_classes = [ProductPublicAuthentication]
 
     def get(self, request, key_string):
-        license_key_obj = StatusService.get_license_status(request.user,
-                                                           key_string)
+        ctx = {
+            'request_id': getattr(request, 'request_id', 'N/A'),
+            'brand_id': request.user.id,
+            'brand_name': request.user.name
+        }
+        license_key_obj = StatusService.get_license_status(
+            brand=request.user,
+            key_string=key_string,
+            context=ctx
+        )
 
         if not license_key_obj:
             return Response(
@@ -153,11 +180,16 @@ class GlobalCustomerLookupView(APIView):
 
     def get(self, request):
         email = request.query_params.get('email')
+        ctx = {
+            'request_id': getattr(request, 'request_id', 'N/A'),
+            'brand_id': request.user.id,
+            'brand_name': request.user.name
+        }
         if not email:
             return Response({"error": "Email parameter is required."},
                             status=400)
 
-        results = GlobalLookupService.get_all_licenses_by_email(email)
+        results = GlobalLookupService.get_all_licenses_by_email(email, ctx)
 
         serializer = GlobalLicenseKeySerializer(results, many=True)
         return Response({
