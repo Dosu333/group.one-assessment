@@ -12,7 +12,6 @@ class FullFlowIntegrationTest(APITestCase):
         self.product = Product.objects.create(brand=self.brand, name="Plugin",
                                               slug="plugin")
 
-        # Endpoints
         self.provision_url = '/api/v1/licenses/provision/'
         self.activate_url = '/api/v1/licenses/activate/'
         self.status_url = lambda key: f'/api/v1/licenses/status/{key}/'
