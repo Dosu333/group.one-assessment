@@ -20,10 +20,6 @@ class ProvisioningService:
             raise ValidationError(
                 "One or more product IDs are invalid for this brand.")
 
-        expiration_date = (
-            timezone.now() + timezone.timedelta(days=expiration_days)
-        )
-
         with transaction.atomic():
             if existing_key:
                 try:
@@ -33,26 +29,42 @@ class ProvisioningService:
                         customer_email=customer_email
                     )
                 except LicenseKey.DoesNotExist:
-                    raise ValidationError(
-                            "License key not found for this customer and brand"
-                        )
+                    raise ValidationError("License key not found.")
             else:
                 license_key = ProvisioningService._create_unique_key(
-                    brand=brand,
-                    customer_email=customer_email
+                    brand=brand, customer_email=customer_email
                 )
 
-            # Create licenses for each product
-            license_objs = [
-                License(
-                    brand=brand,
-                    license_key=license_key,
-                    product=product,
-                    expiration_date=expiration_date,
-                    status='valid'
-                ) for product in products
+            # Identify existing valid licenses for these specific products
+            existing_licenses = License.objects.filter(
+                license_key__customer_email=customer_email,
+                product__id__in=product_ids,
+                status='valid'
+            ).select_for_update()
+
+            existing_product_ids = set(
+                existing_licenses.values_list('product__id', flat=True)
+            )
+
+            # Create licenses only for new products
+            new_product_ids = [
+                p_id
+                for p_id in product_ids if p_id not in existing_product_ids
             ]
-            License.objects.bulk_create(license_objs)
+            expiration_date = (
+                timezone.now() + timezone.timedelta(days=expiration_days)
+            )
+
+            if new_product_ids:
+                new_license_objs = [
+                    License(
+                        license_key=license_key,
+                        product_id=p_id,
+                        expiration_date=expiration_date,
+                        status='valid'
+                    ) for p_id in new_product_ids
+                ]
+                License.objects.bulk_create(new_license_objs)
 
         return license_key
 
