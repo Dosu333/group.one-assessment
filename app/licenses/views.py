@@ -20,6 +20,7 @@ from .services.provisioning import ProvisioningService
 from .services.activation import ActivationService
 from .services.status import StatusService
 from .services.lookups import GlobalLookupService
+from .decorators import idempotent_request
 
 
 class ProductViewSet(ModelViewSet):
@@ -38,6 +39,7 @@ class LicenseProvisioningView(APIView):
     authentication_classes = [BrandApiKeyAuthentication]
     permission_classes = [IsAuthenticatedBrandSystem]
 
+    @idempotent_request()
     def post(self, request):
         serializer = ProvisionLicenseSerializer(
                         data=request.data, context={'request': request})
@@ -59,8 +61,11 @@ class LicenseProvisioningView(APIView):
                 "key": license_key.key_string,
                 "customer_email": license_key.customer_email,
                 "products": [
-                    p.name
-                    for p in license_key.licenses.select_related('product')
+                    {
+                        "id": str(li.product.id),
+                        "name": li.product.name,
+                    }
+                    for li in license_key.licenses.select_related('product')
                 ],
                 "status": "active"
             }, status=status.HTTP_201_CREATED)
