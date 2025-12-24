@@ -20,6 +20,7 @@ from .services.provisioning import ProvisioningService
 from .services.activation import ActivationService
 from .services.status import StatusService
 from .services.lookups import GlobalLookupService
+from .services.lifecycle import LicenseLifecycleService
 from .decorators import idempotent_request
 
 
@@ -94,9 +95,10 @@ class ActivationView(APIView):
                 key_string=data['license_key'],
                 instance_id=data['instance_id']
             )
-            return Response({"status": "activated"}, status=200)
+            return Response({"status": "activated"})
         except ValidationError as e:
-            return Response({"error": e.detail}, status=400)
+            return Response({"error": e.detail},
+                            status=status.HTTP_400_BAD_REQUEST)
 
 
 class DeactivationView(APIView):
@@ -116,9 +118,10 @@ class DeactivationView(APIView):
                 key_string=data['license_key'],
                 instance_id=data['instance_id']
             )
-            return Response({"status": "deactivated"}, status=200)
+            return Response({"status": "deactivated"})
         except ValidationError as e:
-            return Response({"error": e.detail}, status=400)
+            return Response({"error": e.detail},
+                            status=status.HTTP_400_BAD_REQUEST)
 
 
 class LicenseStatusView(APIView):
@@ -162,3 +165,39 @@ class GlobalCustomerLookupView(APIView):
             "total_keys_found": results.count(),
             "licenses": serializer.data
         })
+
+
+class LicenseLifecycleView(APIView):
+    authentication_classes = [BrandApiKeyAuthentication]
+    permission_classes = [IsAuthenticatedBrandSystem]
+
+    @idempotent_request()
+    def patch(self, request, pk):
+        """
+        Handles Renew, Suspend, Resume, Cancel.
+        """
+        action_type = request.data.get('action')  # 'renew', 'update_status'
+
+        try:
+            if action_type == 'renew':
+                days = int(request.data.get('days', 365))
+                license_inst = LicenseLifecycleService.renew_license(
+                    request.user, pk, days
+                )
+            elif action_type == 'update_status':
+                status_val = request.data.get('status')
+                license_inst = LicenseLifecycleService.update_status(
+                    request.user, pk, status_val
+                )
+            else:
+                return Response({"error": "Invalid action."},
+                                status=status.HTTP_400_BAD_REQUEST)
+
+            return Response({
+                "id": license_inst.id,
+                "status": license_inst.status,
+                "expiration_date": license_inst.expiration_date
+            })
+        except ValidationError as e:
+            return Response({"error": e.detail},
+                            status=status.HTTP_400_BAD_REQUEST)

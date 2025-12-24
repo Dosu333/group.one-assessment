@@ -6,6 +6,7 @@ from .views import (
     DeactivationView,
     LicenseStatusView,
     GlobalCustomerLookupView,
+    LicenseLifecycleView,
     ProductViewSet
 )
 
@@ -23,4 +24,6 @@ urlpatterns = [
      path("status/", LicenseStatusView.as_view(), name="license-status"),
      path("global-customer-lookup/", GlobalCustomerLookupView.as_view(),
           name="global-customer-lookup"),
+     path("lifecycle/", LicenseLifecycleView.as_view(),
+          name="license-lifecycle"),
 ]
