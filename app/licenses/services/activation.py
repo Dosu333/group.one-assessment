@@ -42,7 +42,6 @@ class ActivationService:
 
             # Register Activation
             Activation.objects.create(
-                brand=brand,
                 license=license_inst,
                 instance_identifier=instance_id
             )
@@ -54,7 +53,6 @@ class ActivationService:
         Deactivates a specific instance to free up a seat
         """
         deleted_count, _ = Activation.objects.filter(
-            brand=brand,
             license__license_key__key_string=key_string,
             instance_identifier=instance_id
         ).delete()
