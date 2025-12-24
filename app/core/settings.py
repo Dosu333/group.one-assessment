@@ -37,6 +37,8 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "rest_framework",
+    "drf_spectacular",
     "licenses",
 ]
 
@@ -99,6 +101,11 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# rest framework configuration
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
 # logging configuration
 LOGGING = {
     'version': 1,
@@ -121,6 +128,35 @@ LOGGING = {
     },
 }
 
+# drf-spectacular settings
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'group.one Centralized License Service API',
+    'DESCRIPTION': 'Single source of truth for licenses and entitlements across brands.',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    # custom authentication schemes
+    'APPEND_COMPONENTS': {
+        "securitySchemes": {
+            "BrandApiKey": {
+                "type": "apiKey",
+                "in": "header",
+                "name": "X-Brand-Api-Key",
+                "description": "Private key for brand systems (US1, US2, US6)"
+            },
+            "BrandSlug": {
+                "type": "apiKey",
+                "in": "header",
+                "name": "X-Brand-Slug",
+                "description": "Public slug for end-users (US3, US4, US5)"
+            }
+        }
+    },
+    'SECURITY': [
+        {'BrandApiKey': []},
+        {'BrandSlug': []}
+    ],
+    'CONTACT': {'name': 'Oladosu Larinde', 'email': 'larindeakin@gmail.com'}
+}
 
 # Internationalization
 # https://docs.djangoproject.com/en/6.0/topics/i18n/

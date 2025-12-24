@@ -42,6 +42,10 @@ class LicenseInstanceActionSerializer(serializers.Serializer):
         max_length=255,
         help_text="The specific instance being managed."
     )
+    product_id = serializers.UUIDField(
+        required=True,
+        help_text="The product ID associated with the license."
+    )
 
     def validate_license_key(self, value):
         """
@@ -59,6 +63,7 @@ class LicenseInstanceActionSerializer(serializers.Serializer):
 
 class EntitlementSerializer(serializers.Serializer):
     id = serializers.UUIDField()
+    product_id = serializers.UUIDField(source='product.id')
     product_name = serializers.CharField(source='product.name')
     product_slug = serializers.CharField(source='product.slug')
     status = serializers.CharField()
@@ -87,3 +92,19 @@ class GlobalLicenseKeySerializer(serializers.Serializer):
     customer_email = serializers.EmailField()
     created_at = serializers.DateTimeField()
     entitlements = EntitlementSerializer(source='licenses', many=True)
+
+
+class LicenseLifecycleActionSerializer(serializers.Serializer):
+    action = serializers.ChoiceField(choices=['renew', 'update_status'])
+    status = serializers.ChoiceField(
+        choices=['valid', 'suspended', 'cancelled'], required=False
+    )
+    days = serializers.IntegerField(required=False, min_value=1)
+
+    def validate(self, data):
+        if data['action'] == 'update_status' and not data.get('status'):
+            raise serializers.ValidationError(
+                "Status is required for update_status action.")
+        if data['action'] == 'renew' and not data.get('days'):
+            data['days'] = 365  # Default extension
+        return data

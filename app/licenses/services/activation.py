@@ -7,7 +7,7 @@ from rest_framework.exceptions import ValidationError
 
 class ActivationService:
     @staticmethod
-    def activate_instance(brand, key_string, instance_id, context):
+    def activate_instance(brand, key_string, instance_id, product_id, context):
         """
         Activates a license for a specific instance while enforcing
         seat limits.
@@ -16,7 +16,11 @@ class ActivationService:
         log = get_logger(__name__, context)
         log.info(
             "License activation attempt",
-            extra={"key": key_string, "instance": instance_id}
+            extra={
+                "key": key_string,
+                "instance": instance_id,
+                "product": product_id
+            }
         )
         try:
             with transaction.atomic():
@@ -25,21 +29,25 @@ class ActivationService:
                     license_inst = License.objects.select_for_update().get(
                         license_key__brand=brand,
                         license_key__key_string=key_string,
+                        product__id=product_id,
                         status='valid'
                     )
                 except License.DoesNotExist:
                     log.warning(
                         "Activation failed: Invalid or inactive key",
-                        extra={"key": key_string}
+                        extra={"key": key_string, "product": product_id}
                     )
                     raise ValidationError(
-                        "Valid license not found for this key.")
+                        "Valid license not found for this key and product.")
 
                 # Check Expiration
                 if license_inst.expiration_date < timezone.now():
                     log.warning(
                         "Activation failed: Expired",
-                        extra={"key": key_string}
+                        extra={
+                            "key": key_string,
+                            "expiration_date": license_inst.expiration_date
+                        }
                     )
                     raise ValidationError("License has expired.")
 
@@ -82,19 +90,25 @@ class ActivationService:
             raise
 
     @staticmethod
-    def deactivate_instance(brand, key_string, instance_id, context):
+    def deactivate_instance(brand, key_string, instance_id,
+                            product_id, context):
         """
         Deactivates a specific instance to free up a seat
         """
         log = get_logger(__name__, context)
         log.info(
             "License deactivation attempt",
-            extra={"key": key_string, "instance": instance_id}
+            extra={
+                "key": key_string,
+                "instance": instance_id,
+                "product": product_id
+            }
         )
         try:
             deleted_count, _ = Activation.objects.filter(
-                license_license_key__brand=brand,
+                license__license_key__brand=brand,
                 license__license_key__key_string=key_string,
+                license__product__id=product_id,
                 instance_identifier=instance_id
             ).delete()
 
