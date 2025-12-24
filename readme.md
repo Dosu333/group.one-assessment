@@ -7,7 +7,7 @@ The easiest way to run and review the project is using **Docker Compose**. This 
 
 ```bash
 # 1. Clone the repository
-git clone <https://github.com/Dosu333/group.one-assessment.git>
+git clone https://github.com/Dosu333/group.one-assessment.git
 cd group.one-assessment
 
 # 2. Start the services
