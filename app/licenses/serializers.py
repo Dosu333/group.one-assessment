@@ -58,6 +58,7 @@ class LicenseInstanceActionSerializer(serializers.Serializer):
 
 
 class EntitlementSerializer(serializers.Serializer):
+    id = serializers.UUIDField()
     product_name = serializers.CharField(source='product.name')
     product_slug = serializers.CharField(source='product.slug')
     status = serializers.CharField()
@@ -70,7 +71,8 @@ class EntitlementSerializer(serializers.Serializer):
         return obj.activations.count()
 
     def get_seats_remaining(self, obj):
-        return max(0, obj.seat_limit - obj.activations.count())
+        seat_limit = 0 if not obj.seat_limit else obj.seat_limit
+        return max(0, seat_limit - obj.activations.count())
 
 
 class LicenseStatusResponseSerializer(serializers.Serializer):

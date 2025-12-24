@@ -18,7 +18,7 @@ class LicenseLifecycleService:
         with transaction.atomic():
             try:
                 license_inst = License.objects.select_for_update().get(
-                    id=license_id, brand=brand
+                    id=license_id, license_key__brand=brand
                 )
 
                 old_status = license_inst.status
@@ -43,7 +43,7 @@ class LicenseLifecycleService:
         with transaction.atomic():
             try:
                 license_inst = License.objects.select_for_update().get(
-                    id=license_id, brand=brand
+                    id=license_id, license_key__brand=brand
                 )
                 # Extend from the current expiration or 'now',
                 # whichever is later

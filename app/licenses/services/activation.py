@@ -16,7 +16,7 @@ class ActivationService:
             # Fetch license with lock
             try:
                 license_inst = License.objects.select_for_update().get(
-                    brand=brand,
+                    license_key__brand=brand,
                     license_key__key_string=key_string,
                     status='valid'
                 )
@@ -53,6 +53,7 @@ class ActivationService:
         Deactivates a specific instance to free up a seat
         """
         deleted_count, _ = Activation.objects.filter(
+            license_license_key__brand=brand,
             license__license_key__key_string=key_string,
             instance_identifier=instance_id
         ).delete()
