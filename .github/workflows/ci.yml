@@ -59,5 +59,6 @@ jobs:
           SECRET_KEY: ci-test-key-not-for-production
           DEBUG: 0
         run: |
+          cd app
           coverage run manage.py test
           coverage report
