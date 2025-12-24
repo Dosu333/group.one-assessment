@@ -51,7 +51,11 @@ jobs:
 
       - name: Run Tests with Coverage
         env:
-          DATABASE_URL: postgres://postgres:postgres_password@localhost:5432/license_service_test
+          POSTGRES_DB: license_service_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres_password
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
           SECRET_KEY: ci-test-key-not-for-production
           DEBUG: 0
         run: |
