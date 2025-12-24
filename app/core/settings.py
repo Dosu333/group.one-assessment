@@ -21,10 +21,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config('SECRET_KEY')
+SECRET_KEY = config("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config('DEBUG', default=False, cast=bool)
+DEBUG = config("DEBUG", default=False, cast=bool)
 
 ALLOWED_HOSTS = []
 
@@ -83,7 +83,7 @@ DATABASES = {
         "USER": config("POSTGRES_USER"),
         "PASSWORD": config("POSTGRES_PASSWORD"),
         "HOST": config("SQL_HOST"),
-        "PORT": config("SQL_PORT")
+        "PORT": config("SQL_PORT"),
     }
 }
 
@@ -108,59 +108,56 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # rest framework configuration
 REST_FRAMEWORK = {
-    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
 # logging configuration
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'json': {
-            '()': 'pythonjsonlogger.jsonlogger.JsonFormatter',
-            'format': '%(levelname)s %(asctime)s %(module)s %(request_id)s %(brand_id)s %(message)s',
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "json": {
+            "()": "pythonjsonlogger.jsonlogger.JsonFormatter",
+            "format": "%(levelname)s %(asctime)s %(module)s %(request_id)s %(brand_id)s %(message)s",
         },
     },
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-            'formatter': 'json',
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "json",
         },
     },
-    'root': {
-        'handlers': ['console'],
-        'level': 'INFO',
+    "root": {
+        "handlers": ["console"],
+        "level": "INFO",
     },
 }
 
 # drf-spectacular settings
 SPECTACULAR_SETTINGS = {
-    'TITLE': 'group.one Centralized License Service API',
-    'DESCRIPTION': 'Single source of truth for licenses and entitlements across brands.',
-    'VERSION': '1.0.0',
-    'SERVE_INCLUDE_SCHEMA': False,
+    "TITLE": "group.one Centralized License Service API",
+    "DESCRIPTION": "Single source of truth for licenses and entitlements across brands.",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
     # custom authentication schemes
-    'APPEND_COMPONENTS': {
+    "APPEND_COMPONENTS": {
         "securitySchemes": {
             "BrandApiKey": {
                 "type": "apiKey",
                 "in": "header",
                 "name": "X-Brand-Api-Key",
-                "description": "Private key for brand systems (US1, US2, US6)"
+                "description": "Private key for brand systems (US1, US2, US6)",
             },
             "BrandSlug": {
                 "type": "apiKey",
                 "in": "header",
                 "name": "X-Brand-Slug",
-                "description": "Public slug for end-users (US3, US4, US5)"
-            }
+                "description": "Public slug for end-users (US3, US4, US5)",
+            },
         }
     },
-    'SECURITY': [
-        {'BrandApiKey': []},
-        {'BrandSlug': []}
-    ],
-    'CONTACT': {'name': 'Oladosu Larinde', 'email': 'larindeakin@gmail.com'}
+    "SECURITY": [{"BrandApiKey": []}, {"BrandSlug": []}],
+    "CONTACT": {"name": "Oladosu Larinde", "email": "larindeakin@gmail.com"},
 }
 
 # Internationalization

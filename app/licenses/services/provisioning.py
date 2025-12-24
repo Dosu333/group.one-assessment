@@ -8,9 +8,15 @@ from rest_framework.exceptions import ValidationError
 
 class ProvisioningService:
     @staticmethod
-    def provision_license_bundle(*, brand, customer_email, product_ids,
-                                 context, expiration_days=365,
-                                 existing_key=None):
+    def provision_license_bundle(
+        *,
+        brand,
+        customer_email,
+        product_ids,
+        context,
+        expiration_days=365,
+        existing_key=None,
+    ):
         """
         Handles the atomic creation of a license key and its associated
         licenses.
@@ -18,25 +24,25 @@ class ProvisioningService:
         """
         log = get_logger(__name__, context)
 
-        log.info("Initiating license provisioning", extra={
-            "customer_email": customer_email,
-            "product_count": len(product_ids)
-        })
+        log.info(
+            "Initiating license provisioning",
+            extra={"customer_email": customer_email, "product_count": len(product_ids)},
+        )
         try:
             # Validate all products belong to this brand
             products = Product.objects.filter(brand=brand, id__in=product_ids)
             if products.count() != len(product_ids):
                 raise ValidationError(
-                    "One or more product IDs are invalid for this brand.")
+                    "One or more product IDs are invalid for this brand."
+                )
 
             with transaction.atomic():
                 if existing_key:
                     try:
-                        license_key = LicenseKey.objects.select_for_update(
-                            ).get(
+                        license_key = LicenseKey.objects.select_for_update().get(
                             brand=brand,
                             key_string=existing_key,
-                            customer_email=customer_email
+                            customer_email=customer_email,
                         )
                     except LicenseKey.DoesNotExist:
                         raise ValidationError("License key not found.")
@@ -49,20 +55,19 @@ class ProvisioningService:
                 existing_licenses = License.objects.filter(
                     license_key__customer_email=customer_email,
                     product__id__in=product_ids,
-                    status='valid'
+                    status="valid",
                 ).select_for_update()
 
                 existing_product_ids = set(
-                    existing_licenses.values_list('product__id', flat=True)
+                    existing_licenses.values_list("product__id", flat=True)
                 )
 
                 # Create licenses only for new products
                 new_product_ids = [
-                    p_id
-                    for p_id in product_ids if p_id not in existing_product_ids
+                    p_id for p_id in product_ids if p_id not in existing_product_ids
                 ]
-                expiration_date = (
-                    timezone.now() + timezone.timedelta(days=expiration_days)
+                expiration_date = timezone.now() + timezone.timedelta(
+                    days=expiration_days
                 )
 
                 if new_product_ids:
@@ -71,20 +76,24 @@ class ProvisioningService:
                             license_key=license_key,
                             product_id=p_id,
                             expiration_date=expiration_date,
-                            status='valid'
-                        ) for p_id in new_product_ids
+                            status="valid",
+                        )
+                        for p_id in new_product_ids
                     ]
                     License.objects.bulk_create(new_license_objs)
-            log.info("Provisioning successful", extra={
-                "key_string": license_key.key_string,
-                "action": "US1_PROVISION_SUCCESS"
-            })
+            log.info(
+                "Provisioning successful",
+                extra={
+                    "key_string": license_key.key_string,
+                    "action": "US1_PROVISION_SUCCESS",
+                },
+            )
             return license_key
         except Exception as e:
-            log.error("Provisioning failed", extra={
-                "error": str(e),
-                "action": "US1_PROVISION_FAILURE"
-            })
+            log.error(
+                "Provisioning failed",
+                extra={"error": str(e), "action": "US1_PROVISION_FAILURE"},
+            )
             raise
 
     @staticmethod

@@ -7,7 +7,7 @@ def idempotent_request():
     def decorator(view_func):
         @wraps(view_func)
         def _wrapped_view(view_instance, request, *args, **kwargs):
-            key = request.headers.get('Idempotency-Key')
+            key = request.headers.get("Idempotency-Key")
             brand = request.user
 
             if not key:
@@ -21,8 +21,7 @@ def idempotent_request():
             if existing_record:
                 # Return the cached response immediately
                 return Response(
-                    existing_record.response_data,
-                    status=existing_record.status_code
+                    existing_record.response_data, status=existing_record.status_code
                 )
 
             # Execute the original view logic
@@ -34,9 +33,11 @@ def idempotent_request():
                     brand=brand,
                     idempotency_key=key,
                     response_data=response.data,
-                    status_code=response.status_code
+                    status_code=response.status_code,
                 )
 
             return response
+
         return _wrapped_view
+
     return decorator

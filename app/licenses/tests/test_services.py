@@ -9,13 +9,14 @@ from rest_framework.exceptions import ValidationError
 
 class LicenseServiceTests(TestCase):
     def setUp(self):
-        self.brand = Brand.objects.create(name="RankMath", slug="rm",
-                                          api_key="sk_test")
-        self.product_a = Product.objects.create(brand=self.brand, name="Pro",
-                                                slug="pro")
-        self.product_b = Product.objects.create(brand=self.brand,
-                                                name="Content AI", slug="ai")
-        self.ctx = {'request_id': 'unit-test-id', 'brand_id': self.brand.id}
+        self.brand = Brand.objects.create(name="RankMath", slug="rm", api_key="sk_test")
+        self.product_a = Product.objects.create(
+            brand=self.brand, name="Pro", slug="pro"
+        )
+        self.product_b = Product.objects.create(
+            brand=self.brand, name="Content AI", slug="ai"
+        )
+        self.ctx = {"request_id": "unit-test-id", "brand_id": self.brand.id}
 
     def test_bundle_provisioning_integrity(self):
         """
@@ -26,10 +27,10 @@ class LicenseServiceTests(TestCase):
             brand=self.brand,
             customer_email="user@example.com",
             product_ids=[self.product_a.id, self.product_b.id],
-            context=self.ctx
+            context=self.ctx,
         )
         self.assertEqual(key.licenses.count(), 2)
-        self.assertEqual(key.licenses.filter(status='valid').count(), 2)
+        self.assertEqual(key.licenses.filter(status="valid").count(), 2)
 
     def test_seat_limit_concurrency_safety(self):
         """US3: Verify that seat limits are strictly enforced."""
@@ -37,7 +38,7 @@ class LicenseServiceTests(TestCase):
             brand=self.brand,
             customer_email="a@b.com",
             product_ids=[self.product_a.id],
-            context=self.ctx
+            context=self.ctx,
         )
         lic = key.licenses.get(product=self.product_a)
         lic.seat_limit = 1
@@ -49,7 +50,7 @@ class LicenseServiceTests(TestCase):
             key_string=key.key_string,
             instance_id="site-1.com",
             product_id=self.product_a.id,
-            context=self.ctx
+            context=self.ctx,
         )
 
         # Attempt second seat
@@ -59,7 +60,7 @@ class LicenseServiceTests(TestCase):
                 key_string=key.key_string,
                 instance_id="site-2.com",
                 product_id=self.product_a.id,
-                context=self.ctx
+                context=self.ctx,
             )
         self.assertIn("Seat limit reached", str(cm.exception))
 
@@ -69,7 +70,7 @@ class LicenseServiceTests(TestCase):
             brand=self.brand,
             customer_email="a@b.com",
             product_ids=[self.product_a.id],
-            context=self.ctx
+            context=self.ctx,
         )
         lic = key.licenses.first()
         lic.expiration_date = timezone.now() - timezone.timedelta(days=1)
@@ -81,5 +82,5 @@ class LicenseServiceTests(TestCase):
                 key_string=key.key_string,
                 instance_id="site-1.com",
                 product_id=self.product_a.id,
-                context=self.ctx
+                context=self.ctx,
             )

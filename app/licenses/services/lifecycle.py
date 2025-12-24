@@ -14,13 +14,14 @@ class LicenseLifecycleService:
         log = get_logger(__name__, context)
         log.info(
             "License status update attempt",
-            extra={"license_id": license_id, "new_status": new_status}
+            extra={"license_id": license_id, "new_status": new_status},
         )
         try:
             valid_statuses = [choice[0] for choice in LICENSE_STATUS_CHOICES]
             if new_status not in valid_statuses:
                 raise ValidationError(
-                    f"Invalid status. Must be one of: {valid_statuses}")
+                    f"Invalid status. Must be one of: {valid_statuses}"
+                )
 
             with transaction.atomic():
                 try:
@@ -30,20 +31,16 @@ class LicenseLifecycleService:
 
                     old_status = license_inst.status
 
-                    if new_status == 'valid' and old_status == 'cancelled':
+                    if new_status == "valid" and old_status == "cancelled":
                         log.warning(
                             "Attempt to reactivate a cancelled license",
-                            extra={"license_id": license_id}
+                            extra={"license_id": license_id},
                         )
-                        raise ValidationError(
-                            "Cancelled licenses must be renewed.")
+                        raise ValidationError("Cancelled licenses must be renewed.")
                     if new_status == old_status:
                         log.info(
                             "License already in desired status. No update.",
-                            extra={
-                                "license_id": license_id,
-                                "status": new_status
-                            }
+                            extra={"license_id": license_id, "status": new_status},
                         )
                         return license_inst
 
@@ -55,20 +52,20 @@ class LicenseLifecycleService:
                             "license_id": license_id,
                             "old_status": old_status,
                             "new_status": new_status,
-                            "action": "US7_STATUS_UPDATE"
-                        }
+                            "action": "US7_STATUS_UPDATE",
+                        },
                     )
                     return license_inst
                 except License.DoesNotExist:
                     log.warning(
                         "License status update failed: License not found",
-                        extra={"license_id": license_id}
+                        extra={"license_id": license_id},
                     )
                     raise ValidationError("License not found for this brand.")
         except Exception as e:
             log.error(
                 "License status update error",
-                extra={"error": str(e), "license_id": license_id}
+                extra={"error": str(e), "license_id": license_id},
             )
             raise
 
@@ -80,7 +77,7 @@ class LicenseLifecycleService:
         log = get_logger(__name__, context)
         log.info(
             "License renewal attempt",
-            extra={"license_id": license_id, "extension_days": extension_days}
+            extra={"license_id": license_id, "extension_days": extension_days},
         )
         try:
             with transaction.atomic():
@@ -93,31 +90,30 @@ class LicenseLifecycleService:
                     current_expiry = license_inst.expiration_date
                     base_date = max(current_expiry, timezone.now())
 
-                    license_inst.expiration_date = (
-                        base_date + timezone.timedelta(days=extension_days))
-                    license_inst.status = 'valid'
+                    license_inst.expiration_date = base_date + timezone.timedelta(
+                        days=extension_days
+                    )
+                    license_inst.status = "valid"
                     license_inst.save()
 
                     log.info(
                         "License renewed successfully",
                         extra={
                             "license_id": license_id,
-                            "new_expiration_date": (
-                                license_inst.expiration_date
-                            ),
-                            "action": "US6_RENEW"
-                        }
+                            "new_expiration_date": (license_inst.expiration_date),
+                            "action": "US6_RENEW",
+                        },
                     )
                     return license_inst
                 except License.DoesNotExist:
                     log.warning(
                         "License renewal failed: License not found",
-                        extra={"license_id": license_id}
+                        extra={"license_id": license_id},
                     )
                     raise ValidationError("License not found.")
         except Exception as e:
             log.error(
                 "License renewal error",
-                extra={"error": str(e), "license_id": license_id}
+                extra={"error": str(e), "license_id": license_id},
             )
             raise

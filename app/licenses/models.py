@@ -5,9 +5,9 @@ import uuid
 
 
 LICENSE_STATUS_CHOICES = (
-    ('valid', 'Valid'),
-    ('suspended', 'Suspended'),
-    ('cancelled', 'Cancelled'),
+    ("valid", "Valid"),
+    ("suspended", "Suspended"),
+    ("cancelled", "Cancelled"),
 )
 
 
@@ -48,8 +48,7 @@ class Brand(BaseModel):
 
 
 class Product(BaseModel):
-    brand = models.ForeignKey(Brand, on_delete=models.CASCADE,
-                              related_name='products')
+    brand = models.ForeignKey(Brand, on_delete=models.CASCADE, related_name="products")
     name = models.CharField(max_length=255)
     slug = models.SlugField(unique=True)
     description = models.TextField(blank=True, null=True)
@@ -75,8 +74,9 @@ class Product(BaseModel):
 
 
 class LicenseKey(BaseModel):
-    brand = models.ForeignKey(Brand, on_delete=models.CASCADE,
-                              related_name='license_keys')
+    brand = models.ForeignKey(
+        Brand, on_delete=models.CASCADE, related_name="license_keys"
+    )
     key_string = models.CharField(max_length=255, unique=True)
     customer_email = models.EmailField()
 
@@ -85,12 +85,15 @@ class LicenseKey(BaseModel):
 
 
 class License(BaseModel):
-    license_key = models.ForeignKey(LicenseKey, on_delete=models.CASCADE,
-                                    related_name='licenses')
-    product = models.ForeignKey(Product, on_delete=models.CASCADE,
-                                related_name='licenses')
-    status = models.CharField(max_length=20, choices=LICENSE_STATUS_CHOICES,
-                              default='valid')
+    license_key = models.ForeignKey(
+        LicenseKey, on_delete=models.CASCADE, related_name="licenses"
+    )
+    product = models.ForeignKey(
+        Product, on_delete=models.CASCADE, related_name="licenses"
+    )
+    status = models.CharField(
+        max_length=20, choices=LICENSE_STATUS_CHOICES, default="valid"
+    )
     expiration_date = models.DateTimeField(blank=True, null=True)
     seat_limit = models.PositiveIntegerField(blank=True, null=True)
 
@@ -99,25 +102,26 @@ class License(BaseModel):
 
 
 class Activation(BaseModel):
-    license = models.ForeignKey(License, on_delete=models.CASCADE,
-                                related_name='activations')
+    license = models.ForeignKey(
+        License, on_delete=models.CASCADE, related_name="activations"
+    )
     instance_identifier = models.CharField(max_length=255)
 
     class Meta:
-        unique_together = ('license', 'instance_identifier')
+        unique_together = ("license", "instance_identifier")
 
     def __str__(self):
         return self.instance_identifier
 
 
 class IdempotencyRecord(BaseModel):
-    brand = models.ForeignKey('Brand', on_delete=models.CASCADE)
+    brand = models.ForeignKey("Brand", on_delete=models.CASCADE)
     idempotency_key = models.CharField(max_length=255)
     response_data = models.JSONField()
     status_code = models.IntegerField()
 
     class Meta:
-        unique_together = ('brand', 'idempotency_key')
+        unique_together = ("brand", "idempotency_key")
         indexes = [
-            models.Index(fields=['brand', 'idempotency_key']),
+            models.Index(fields=["brand", "idempotency_key"]),
         ]

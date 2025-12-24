@@ -16,19 +16,17 @@ class StatusService:
         try:
             license_key = LicenseKey.objects.prefetch_related(
                 Prefetch(
-                    'licenses',
-                    queryset=License.objects.select_related('product')
-                    .prefetch_related('activations')
+                    "licenses",
+                    queryset=License.objects.select_related("product").prefetch_related(
+                        "activations"
+                    ),
                 )
             ).get(brand=brand, key_string=key_string)
             log.info(
                 "Status check successful",
-                extra={"key": key_string, "action": "US4_STATUS"}
+                extra={"key": key_string, "action": "US4_STATUS"},
             )
             return license_key
         except LicenseKey.DoesNotExist:
-            log.warning(
-                "Status check failed: Key not found",
-                extra={"key": key_string}
-            )
+            log.warning("Status check failed: Key not found", extra={"key": key_string})
             return None
