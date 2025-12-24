@@ -12,7 +12,7 @@ jobs:
     
     services:
       postgres:
-        image: postgres:15
+        image: postgres:15-alpine
         env:
           POSTGRES_DB: license_service_test
           POSTGRES_USER: postgres
@@ -55,5 +55,5 @@ jobs:
           SECRET_KEY: ci-test-key-not-for-production
           DEBUG: 0
         run: |
-          coverage run manage.py test
+          coverage run app/manage.py test
           coverage report
