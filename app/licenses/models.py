@@ -90,7 +90,7 @@ class License(BaseModel):
     product = models.ForeignKey(Product, on_delete=models.CASCADE,
                                 related_name='licenses')
     status = models.CharField(max_length=20, choices=LICENSE_STATUS_CHOICES,
-                              default='VALID')
+                              default='valid')
     expiration_date = models.DateTimeField(blank=True, null=True)
     seat_limit = models.PositiveIntegerField(blank=True, null=True)
 
@@ -108,3 +108,16 @@ class Activation(BaseModel):
 
     def __str__(self):
         return self.instance_identifier
+
+
+class IdempotencyRecord(BaseModel):
+    brand = models.ForeignKey('Brand', on_delete=models.CASCADE)
+    idempotency_key = models.CharField(max_length=255)
+    response_data = models.JSONField()
+    status_code = models.IntegerField()
+
+    class Meta:
+        unique_together = ('brand', 'idempotency_key')
+        indexes = [
+            models.Index(fields=['brand', 'idempotency_key']),
+        ]
